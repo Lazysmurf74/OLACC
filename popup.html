@@ -52,7 +52,7 @@
       <path d="M5.5 6L6 3h4l.5 3" stroke="white" stroke-width="1.3" stroke-linejoin="round"/>
       <path d="M1 6h14" stroke="white" stroke-width="1.3" stroke-linecap="round"/>
     </svg>
-    Clean now
+    <span id="cleanBtnText">Clean now</span>
   </button>
 
   <button id="addSiteBtn" class="protect-btn">
@@ -75,6 +75,29 @@
       <span class="data-icon">⚡</span>
       <span>Cache</span>
     </button>
+  </div>
+
+  <!-- STATISTICHE -->
+  <div class="stats-card">
+    <div class="stats-header">
+      <span class="stats-title">Statistiche</span>
+      <button class="reset-stats-btn" id="resetStatsBtn" title="Azzera statistiche">↺</button>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <span class="stat-value" id="statCleans">—</span>
+        <span class="stat-label">Pulizie</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="statCookies">—</span>
+        <span class="stat-label">Cookie rimossi</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="statSites">—</span>
+        <span class="stat-label">Siti unici</span>
+      </div>
+    </div>
+    <div class="stat-last" id="statLast">Nessuna pulizia ancora</div>
   </div>
 
 </div>

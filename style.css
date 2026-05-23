@@ -330,3 +330,164 @@ button#saveBtn {
 button#saveBtn:hover {
   opacity: 0.9;
 }
+
+/* ---- OPTIONS PAGE ---- */
+.options-container {
+  max-width: 480px;
+  padding-bottom: 24px;
+}
+
+.divider {
+  height: 1px;
+  background: #22263a;
+  margin: 4px 0;
+}
+
+/* IMPORT/EXPORT */
+.io-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.io-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid #2a2d3e;
+  transition: all 0.15s;
+}
+
+.export-btn {
+  background: transparent;
+  color: #a78bfa;
+  border-color: #a78bfa44;
+}
+
+.export-btn:hover {
+  background: #1a1c2a;
+  border-color: #a78bfa;
+}
+
+.import-btn {
+  background: transparent;
+  color: #6ee7b7;
+  border-color: #6ee7b744;
+}
+
+.import-btn:hover {
+  background: #1a1c2a;
+  border-color: #6ee7b7;
+}
+
+.io-message {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.io-message.success {
+  background: #1a2e22;
+  color: #6ee7b7;
+  border: 1px solid #6ee7b744;
+}
+
+.io-message.error {
+  background: #2e1a1a;
+  color: #fca5a5;
+  border: 1px solid #fca5a544;
+}
+
+/* ---- STATS CARD (popup) ---- */
+.stats-card {
+  background: #161825;
+  border: 1px solid #22263a;
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stats-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stats-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.reset-stats-btn {
+  background: transparent;
+  border: none;
+  color: #4b5563;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 6px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.reset-stats-btn:hover {
+  color: #9ca3af;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: #e8e9f0;
+  letter-spacing: -0.5px;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.stat-last {
+  font-size: 11px;
+  color: #4b5563;
+  text-align: center;
+  padding-top: 2px;
+  border-top: 1px solid #22263a;
+}
+
+/* CLEAN BUTTON STATES */
+.clean-btn.done {
+  background: linear-gradient(135deg, #065f46, #047857);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
+}
+
+.clean-btn:disabled {
+  cursor: default;
+  transform: none !important;
+}

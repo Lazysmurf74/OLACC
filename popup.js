@@ -6,10 +6,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   const hostname = new URL(tab.url).hostname;
-
   document.getElementById("currentSite").innerText = hostname;
 
-  // stato autoclean
+  // --- AUTO CLEAN TOGGLE ---
   const settings = await chrome.storage.sync.get({
     autoClean: true,
     clearCookies: true,
@@ -21,17 +20,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   const autoCleanStatus = document.getElementById("autoCleanStatus");
 
   autoCleanToggle.checked = settings.autoClean;
-  autoCleanStatus.textContent = settings.autoClean ? "ACTIVE" : "INACTIVE";
-  if (!settings.autoClean) autoCleanStatus.classList.add("inactive");
+  updateAutoCleanStatus(settings.autoClean);
 
   autoCleanToggle.addEventListener("change", async () => {
     const val = autoCleanToggle.checked;
     await chrome.storage.sync.set({ autoClean: val });
-    autoCleanStatus.textContent = val ? "ACTIVE" : "INACTIVE";
-    autoCleanStatus.classList.toggle("inactive", !val);
+    updateAutoCleanStatus(val);
   });
 
-  // bottoni dati con stato attivo
+  function updateAutoCleanStatus(active) {
+    autoCleanStatus.textContent = active ? "ACTIVE" : "INACTIVE";
+    autoCleanStatus.classList.toggle("inactive", !active);
+  }
+
+  // --- DATA BUTTONS ---
   const cookieBtn = document.getElementById("cookieBtn");
   const storageBtn = document.getElementById("storageBtn");
   const cacheBtn = document.getElementById("cacheBtn");
@@ -50,17 +52,84 @@ document.addEventListener("DOMContentLoaded", async () => {
   storageBtn.addEventListener("click", () => toggleDataBtn(storageBtn, "clearLocalStorage"));
   cacheBtn.addEventListener("click", () => toggleDataBtn(cacheBtn, "clearCache"));
 
-  // pulizia manuale
-  document.getElementById("cleanBtn")
-    .addEventListener("click", async () => {
-      chrome.runtime.sendMessage({ action: "clean", url: tab.url });
-    });
+  // --- CLEAN BUTTON ---
+  const cleanBtn = document.getElementById("cleanBtn");
+  const cleanBtnText = document.getElementById("cleanBtnText");
 
-  // aggiungi/proteggi sito
-  document.getElementById("addSiteBtn")
-    .addEventListener("click", async () => {
-      chrome.runtime.sendMessage({ action: "addCurrentSite", domain: hostname });
-      alert(hostname + " aggiunto alla lista");
+  cleanBtn.addEventListener("click", async () => {
+    cleanBtn.classList.add("loading");
+    cleanBtnText.textContent = "Pulizia...";
+    cleanBtn.disabled = true;
+
+    chrome.runtime.sendMessage({ action: "clean", url: tab.url });
+
+    setTimeout(async () => {
+      cleanBtnText.textContent = "✓ Completata";
+      cleanBtn.classList.remove("loading");
+      cleanBtn.classList.add("done");
+
+      await loadStats();
+
+      setTimeout(() => {
+        cleanBtnText.textContent = "Clean now";
+        cleanBtn.classList.remove("done");
+        cleanBtn.disabled = false;
+      }, 2000);
+    }, 1000);
+  });
+
+  // --- PROTECT SITE ---
+  document.getElementById("addSiteBtn").addEventListener("click", async () => {
+    chrome.runtime.sendMessage({ action: "addCurrentSite", domain: hostname });
+
+    const btn = document.getElementById("addSiteBtn");
+    btn.textContent = "✓ " + hostname + " protetto";
+    btn.disabled = true;
+
+    setTimeout(() => {
+      btn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 2L3 4.5V8c0 2.8 2 5.2 5 6 3-0.8 5-3.2 5-6V4.5L8 2z"
+            stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+        </svg>
+        Protect site`;
+      btn.disabled = false;
+    }, 2500);
+  });
+
+  // --- STATISTICHE ---
+  async function loadStats() {
+    chrome.runtime.sendMessage({ action: "getStats" }, (stats) => {
+      if (!stats) return;
+
+      document.getElementById("statCleans").textContent =
+        stats.totalCleans.toLocaleString();
+
+      document.getElementById("statCookies").textContent =
+        stats.totalCookiesRemoved.toLocaleString();
+
+      document.getElementById("statSites").textContent =
+        (stats.uniqueDomains || []).length.toLocaleString();
+
+      if (stats.lastClean) {
+        const date = new Date(stats.lastClean.timestamp);
+        const formatted = date.toLocaleDateString("it-IT", {
+          day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
+        });
+        document.getElementById("statLast").textContent =
+          "Ultimo: " + stats.lastClean.domain + " · " + formatted;
+      }
     });
+  }
+
+  loadStats();
+
+  // --- RESET STATS ---
+  document.getElementById("resetStatsBtn").addEventListener("click", async () => {
+    if (!confirm("Azzerare tutte le statistiche?")) return;
+    chrome.runtime.sendMessage({ action: "resetStats" }, () => {
+      loadStats();
+    });
+  });
 
 });
