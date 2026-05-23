@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Site Cleaner Pro",
-  "version": "3.0.0",
-  "description": "Pulizia avanzata cookie e dati siti.",
+  "name": "OLACC",
+  "version": "1.0.0",
+  "description": "OperaLazyAutomaticCookieCleaner-Pulizia avanzata cookie e dati siti.",
   "permissions": [
     "cookies",
     "tabs",
