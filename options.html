@@ -2,78 +2,61 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="options-body">
+<div class="opt-wrap">
 
-<div class="container options-container">
+  <h1>⚙️ Impostazioni avanzate</h1>
 
-  <h1>Impostazioni avanzate</h1>
+  <div class="opt-grid">
 
-  <label>
-    Modalità:
-    <select id="mode">
-      <option value="whitelist">Whitelist</option>
-      <option value="blacklist">Blacklist</option>
-    </select>
-  </label>
+    <!-- Modalità -->
+    <div class="opt-card">
+      <h2>Modalità lista</h2>
+      <select id="mode">
+        <option value="whitelist">Whitelist — pulisci tutto tranne la lista</option>
+        <option value="blacklist">Blacklist — pulisci solo la lista</option>
+      </select>
+    </div>
 
-  <label>
-    <input type="checkbox" id="clearCookies">
-    Elimina cookie
-  </label>
+    <!-- Cosa eliminare -->
+    <div class="opt-card">
+      <h2>Cosa eliminare</h2>
+      <label><input type="checkbox" id="clearCookies"> Elimina cookie</label>
+      <label><input type="checkbox" id="clearCache"> Elimina cache</label>
+      <label><input type="checkbox" id="clearLocalStorage"> Elimina LocalStorage + IndexedDB</label>
+      <label><input type="checkbox" id="clearHistory"> Elimina cronologia</label>
+    </div>
 
-  <label>
-    <input type="checkbox" id="clearCache">
-    Elimina cache
-  </label>
+    <!-- Whitelist / Blacklist -->
+    <div class="opt-card">
+      <h2>Whitelist / Blacklist</h2>
+      <p>Un dominio per riga. Supporta *.dominio.com</p>
+      <textarea id="siteList" placeholder="esempio.com&#10;*.tracker.net"></textarea>
+    </div>
 
-  <label>
-    <input type="checkbox" id="clearLocalStorage">
-    Elimina LocalStorage + IndexedDB
-  </label>
+    <!-- Login protetti -->
+    <div class="opt-card">
+      <h2>Login protetti</h2>
+      <p>Questi siti non verranno mai puliti.</p>
+      <textarea id="protectedLogins"></textarea>
+    </div>
 
-  <label>
-    <input type="checkbox" id="clearHistory">
-    Elimina cronologia
-  </label>
+    <!-- Eccezioni banner — full width -->
+    <div class="opt-card full">
+      <h2>Eccezioni banner cookie</h2>
+      <p>Su questi siti i banner cookie NON verranno rimossi (un dominio per riga).</p>
+      <textarea id="cookieBannerExceptions" style="min-height:70px" placeholder="esempio.com"></textarea>
+    </div>
 
-  <h2>Whitelist / Blacklist</h2>
-  <p>Un dominio per riga. Supporta *.dominio.com</p>
-  <textarea id="siteList"></textarea>
-
-  <h2>Login protetti</h2>
-  <textarea id="protectedLogins"></textarea>
-
-  <button id="saveBtn">Salva impostazioni</button>
-
-  <div class="divider"></div>
-
-  <h2>Backup impostazioni</h2>
-  <p>Esporta o importa tutte le impostazioni come file JSON.</p>
-
-  <div class="io-row">
-    <button id="exportBtn" class="io-btn export-btn">
-      <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-        <path d="M7.5 1v8M4 6l3.5 3.5L11 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M2 11v1a1 1 0 001 1h9a1 1 0 001-1v-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-      </svg>
-      Esporta JSON
-    </button>
-    <button id="importBtn" class="io-btn import-btn">
-      <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-        <path d="M7.5 10V2M4 5.5L7.5 2 11 5.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M2 11v1a1 1 0 001 1h9a1 1 0 001-1v-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-      </svg>
-      Importa JSON
-    </button>
-    <input type="file" id="importFile" accept=".json" style="display:none">
   </div>
 
-  <div id="ioMessage" class="io-message" style="display:none"></div>
+  <button id="saveBtn" class="opt-save">💾 Salva impostazioni</button>
 
 </div>
-
 <script src="options.js"></script>
 </body>
 </html>
