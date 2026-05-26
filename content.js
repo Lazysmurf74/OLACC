@@ -22,65 +22,26 @@
 
   if (isException) return;
 
-  // ── 2. Carica regole dal background (cache locale) ────────────────────────
-  const rulesData = await chrome.runtime.sendMessage({ action: "getRules" });
+  // ── Costanti (dichiarate prima di tutto il codice esecutivo) ──────────────
 
-  // ── 3. Applica regola specifica per il dominio (se esiste) ────────────────
-  if (rulesData) {
-    const { rules, commons } = rulesData;
+  const REMOVE_SELECTORS = [
+    "#onetrust-consent-sdk","#CybotCookiebotDialog","#sp-cc",
+    "#qc-cmp2-container","#didomi-popup","#usercentrics-root",
+    "#axeptio_overlay",".iubenda-cs-container","#cookielaw-info-bar",
+    "[id*='cookie-banner']","[id*='cookie-consent']","[id*='gdpr-banner']",
+    "[class*='ConsentLayer']","[class*='CookieConsent']","[class*='CookieBar']",
+  ];
 
-    // Cerca la regola per questo dominio o un dominio padre
-    let siteRule = null;
-    for (const key of Object.keys(rules)) {
-      if (hostname === key || hostname.endsWith("." + key)) {
-        siteRule = rules[key];
-        break;
-      }
-    }
+  const KEYWORDS = [
+    "rispettiamo la tua privacy","apprezziamo la tua privacy",
+    "utilizziamo i cookie","usiamo i cookie","cookie tecnici",
+    "accetta tutti","rifiuta tutti","accetta tutto",
+    "we use cookies","accept all cookies","reject all",
+    "cookie policy","gestisci preferenze","continua senza accettare",
+    "preferenze cookie","consenso cookie",
+  ];
 
-    if (siteRule) {
-      // Applica regole specifiche del sito
-      const cssRules = [];
-      const jsHandlers = [];
-
-      for (const entry of siteRule) {
-        if (entry.s) cssRules.push(entry.s);                  // CSS selector
-        if (entry.c !== undefined) cssRules.push(commons[entry.c]); // common CSS
-        if (entry.j !== undefined) jsHandlers.push(entry.j);  // JS handler
-      }
-
-      if (cssRules.length) {
-        injectCSS(cssRules.filter(Boolean).join("\n"));
-      }
-
-      for (const handlerKey of jsHandlers) {
-        runHandler(handlerKey);
-      }
-    }
-  }
-
-  // ── 4. Fallback: CSS generico + euristica ────────────────────────────────
-  injectGenericCSS();
-
-  const obs = new MutationObserver(() => {
-    cleanBySelectors();
-    cleanByHeuristic();
-    restoreScroll();
-  });
-  obs.observe(document.documentElement, { childList: true, subtree: true });
-
-  window.addEventListener("load", () => {
-    cleanBySelectors();
-    cleanByHeuristic();
-    restoreScroll();
-    setTimeout(() => obs.disconnect(), 20000);
-  });
-
-  cleanBySelectors();
-  cleanByHeuristic();
-  restoreScroll();
-
-  // ── Funzioni ──────────────────────────────────────────────────────────────
+  // ── Funzioni (hoistate, ma meglio dichiararle qui per chiarezza) ──────────
 
   function injectCSS(css) {
     const el = document.createElement("style");
@@ -89,9 +50,7 @@
   }
 
   function injectGenericCSS() {
-    // Regole comuni dal database + selettori noti CMP
-    const css = `
-      /* CMP noti */
+    injectCSS(`
       #onetrust-consent-sdk,#onetrust-banner-sdk,.onetrust-pc-dark-filter,
       #CybotCookiebotDialog,#CybotCookiebotDialogBody,.CybotCookiebotFader,
       #sp-cc,.sp-message-container,[id^='sp_message'],[class*='sp-message'],
@@ -105,7 +64,6 @@
       #evidon-banner,.evidon-banner,
       .cmpbox,.cmpboxer,#cmp-container,.cmp-container,#cmpwrapper,#cmpbox2,
       #cookielaw-info-bar,.cli-bar-container,
-      /* Generic keyword selectors */
       [id*='cookie-banner'],[id*='cookie-consent'],[id*='cookie-notice'],
       [id*='cookie-popup'],[id*='cookie-bar'],[id*='cookie-wall'],
       [id*='cookie-overlay'],[id*='cookie-modal'],[id*='cookiebanner'],
@@ -126,18 +84,8 @@
       [aria-label*='cookie' i],[aria-label*='gdpr' i],
       [aria-label*='consent' i],[aria-label*='privacy' i]
       { display: none !important; visibility: hidden !important; }
-    `;
-    injectCSS(css);
+    `);
   }
-
-  // Selettori extra da rimuovere dal DOM (non solo nascondere)
-  const REMOVE_SELECTORS = [
-    "#onetrust-consent-sdk","#CybotCookiebotDialog","#sp-cc",
-    "#qc-cmp2-container","#didomi-popup","#usercentrics-root",
-    "#axeptio_overlay",".iubenda-cs-container","#cookielaw-info-bar",
-    "[id*='cookie-banner']","[id*='cookie-consent']","[id*='gdpr-banner']",
-    "[class*='ConsentLayer']","[class*='CookieConsent']","[class*='CookieBar']",
-  ];
 
   function cleanBySelectors() {
     for (const sel of REMOVE_SELECTORS) {
@@ -145,16 +93,6 @@
       catch (_) {}
     }
   }
-
-  // Euristca: elementi fixed/sticky con testo cookie
-  const KEYWORDS = [
-    "rispettiamo la tua privacy","apprezziamo la tua privacy",
-    "utilizziamo i cookie","usiamo i cookie","cookie tecnici",
-    "accetta tutti","rifiuta tutti","accetta tutto",
-    "we use cookies","accept all cookies","reject all",
-    "cookie policy","gestisci preferenze","continua senza accettare",
-    "preferenze cookie","consenso cookie",
-  ];
 
   function textMatches(el) {
     const t = (el.innerText || "").toLowerCase();
@@ -179,9 +117,8 @@
       document.querySelectorAll(
         "body > div, body > section, body > aside, body > dialog, body > nav"
       ).forEach(el => {
-        if (isOverlay(el) && textMatches(el)) {
+        if (isOverlay(el) && textMatches(el))
           el.style.setProperty("display", "none", "important");
-        }
       });
     } catch (_) {}
   }
@@ -195,12 +132,10 @@
     } catch (_) {}
   }
 
-  // ── JS Handlers (per siti che richiedono un click sul "rifiuta") ──────────
   function runHandler(key) {
     switch (key) {
       case "0_defaultClickHandler":
       case "5_clickHandler":
-        // Prova a cliccare "rifiuta/continua senza accettare"
         setTimeout(() => {
           const rejectTexts = [
             "rifiuta tutti","rifiuta","continua senza accettare",
@@ -213,24 +148,67 @@
           }
         }, 800);
         break;
-
       case "2_sessionStorageHandler":
         try { sessionStorage.setItem("cookieConsent","true"); } catch(_){}
         break;
-
       case "3_localStorageHandler":
         try { localStorage.setItem("cookieConsent","true"); } catch(_){}
         break;
-
       case "6_cookieHandler":
         document.cookie = "cookieconsent_status=dismiss; max-age=31536000; path=/";
         document.cookie = "cookie_consent=1; max-age=31536000; path=/";
         break;
-
       case "8_googleHandler":
         try { localStorage.setItem("CONSENT","YES+"); } catch(_){}
         break;
     }
   }
+
+  // ── 2. CSS generico iniettato subito ──────────────────────────────────────
+  injectGenericCSS();
+
+  // ── 3. Regole specifiche per dominio dal database ─────────────────────────
+  const rulesData = await chrome.runtime.sendMessage({ action: "getRules" });
+
+  if (rulesData) {
+    const { rules, commons } = rulesData;
+    let siteRule = null;
+    for (const key of Object.keys(rules)) {
+      if (hostname === key || hostname.endsWith("." + key)) {
+        siteRule = rules[key];
+        break;
+      }
+    }
+    if (siteRule) {
+      const cssRules = [];
+      const jsHandlers = [];
+      for (const entry of siteRule) {
+        if (entry.s) cssRules.push(entry.s);
+        if (entry.c !== undefined) cssRules.push(commons[entry.c]);
+        if (entry.j !== undefined) jsHandlers.push(entry.j);
+      }
+      if (cssRules.length) injectCSS(cssRules.filter(Boolean).join("\n"));
+      for (const h of jsHandlers) runHandler(h);
+    }
+  }
+
+  // ── 4. Pulizia DOM + observer ─────────────────────────────────────────────
+  cleanBySelectors();
+  cleanByHeuristic();
+  restoreScroll();
+
+  const obs = new MutationObserver(() => {
+    cleanBySelectors();
+    cleanByHeuristic();
+    restoreScroll();
+  });
+  obs.observe(document.documentElement, { childList: true, subtree: true });
+
+  window.addEventListener("load", () => {
+    cleanBySelectors();
+    cleanByHeuristic();
+    restoreScroll();
+    setTimeout(() => obs.disconnect(), 20000);
+  });
 
 })();
