@@ -85,17 +85,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // ── Stats ──────────────────────────────────────────────────────────────
   async function loadStats() {
-    const st = await chrome.storage.local.get({
-      totalCleans: 0, totalCookies: 0, uniqueSites: [], lastClean: null
-    });
+    const st = await chrome.runtime.sendMessage({ action: "getStats" });
     document.getElementById("sCleans").textContent  = st.totalCleans;
-    document.getElementById("sCookies").textContent = st.totalCookies;
-    document.getElementById("sSites").textContent   = st.uniqueSites.length;
+    document.getElementById("sCookies").textContent = st.totalCookiesRemoved;
+    document.getElementById("sSites").textContent   = st.uniqueDomains.length;
     if (st.lastClean) {
-      const d = new Date(st.lastClean);
+      const d = new Date(st.lastClean.timestamp);
       document.getElementById("lastClean").textContent =
-        "Ultimo: " + d.toLocaleDateString("it-IT", { day: "numeric", month: "short" }) +
-        " · " + d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+        "Ultimo: " + st.lastClean.domain + " · " +
+        d.toLocaleDateString("it-IT", { day: "numeric", month: "short" }) +
+        " " + d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
     }
   }
   loadStats();
