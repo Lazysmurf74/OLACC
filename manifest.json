@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Site Cleaner Pro",
-  "version": "5.0.0",
+  "version": "5.2.0",
   "description": "Pulizia avanzata cookie e dati siti.",
   "permissions": [
     "cookies",
@@ -9,9 +9,9 @@
     "storage",
     "browsingData",
     "history",
-    "notifications",
     "scripting",
-    "sessions"
+    "sessions",
+    "notifications"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -24,8 +24,12 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_start",
       "all_frames": true
     }

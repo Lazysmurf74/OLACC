@@ -52,14 +52,24 @@ function matchesDomain(domain, list) {
 
 async function shouldClean(domain) {
   const s = await getSettings();
-  if (matchesDomain(domain, s.protectedLogins)) return false;
+  console.log("[SCP] shouldClean →", domain);
+  console.log("[SCP]   mode:", s.mode);
+  console.log("[SCP]   protectedLogins:", s.protectedLogins);
+  console.log("[SCP]   siteList:", s.siteList);
+  if (matchesDomain(domain, s.protectedLogins)) {
+    console.log("[SCP]   → BLOCCATO (protectedLogin)");
+    return false;
+  }
   const listed = matchesDomain(domain, s.siteList);
-  return s.mode === "whitelist" ? !listed : listed;
+  console.log("[SCP]   in siteList:", listed);
+  const result = s.mode === "whitelist" ? !listed : listed;
+  console.log("[SCP]   → " + (result ? "PULISCE" : "SALTA"));
+  return result;
 }
 
 // ── Pulizia ───────────────────────────────────────────────────────────────────
 
-async function clearSiteData(tabUrl) {
+async function clearSiteData(tabUrl, fromTabClose = false) {
   const settings = await getSettings();
   if (!tabUrl || !tabUrl.startsWith("http")) return;
 
@@ -67,21 +77,35 @@ async function clearSiteData(tabUrl) {
   const domain = url.hostname;
 
   if (!(await shouldClean(domain))) {
-    console.log("[SCP] Protetto:", domain);
+    console.log("[SCP] clearSiteData: dominio saltato →", domain);
     return;
   }
+  console.log("[SCP] clearSiteData: pulizia su →", domain);
+  console.log("[SCP]   clearCookies:", settings.clearCookies, "clearCache:", settings.clearCache, "clearLocalStorage:", settings.clearLocalStorage);
 
   let removedCookies = 0;
 
   if (settings.clearCookies) {
-    const cookies = await chrome.cookies.getAll({ domain });
-    removedCookies = cookies.length;
-    for (const cookie of cookies) {
-      const protocol  = cookie.secure ? "https:" : "http:";
-      const cookieUrl = protocol + "//" + cookie.domain.replace(/^\./, "") + cookie.path;
-      try { await chrome.cookies.remove({ url: cookieUrl, name: cookie.name, storeId: cookie.storeId }); }
-      catch (e) { console.error(e); }
+    // Raccoglie domini da pulire: sottodominio corrente + tutti i domini padre
+    const domainsToClean = new Set();
+    domainsToClean.add(domain);
+    const parts = domain.split(".");
+    for (let i = 1; i < parts.length - 1; i++) {
+      domainsToClean.add(parts.slice(i).join("."));
     }
+    console.log("[SCP]   domini cookie da pulire:", [...domainsToClean]);
+
+    for (const d of domainsToClean) {
+      const cookies = await chrome.cookies.getAll({ domain: d });
+      removedCookies += cookies.length;
+      for (const cookie of cookies) {
+        const protocol  = cookie.secure ? "https:" : "http:";
+        const cookieUrl = protocol + "//" + cookie.domain.replace(/^\./, "") + cookie.path;
+        try { await chrome.cookies.remove({ url: cookieUrl, name: cookie.name, storeId: cookie.storeId }); }
+        catch (e) { console.error(e); }
+      }
+    }
+    console.log("[SCP]   cookie rimossi:", removedCookies);
   }
 
   const dataToRemove = {};
@@ -103,11 +127,62 @@ async function clearSiteData(tabUrl) {
 
   await updateStats(domain, removedCookies);
 
-  chrome.notifications.create({
-    type: "basic", iconUrl: "icons/icon48.png",
-    title: "Site Cleaner Pro",
-    message: "Pulizia completata: " + domain
-  });
+  await notifyClean(domain, fromTabClose);
+}
+
+// ── Notifica pulizia ─────────────────────────────────────────────────────────
+
+async function notifyClean(domain, fromTabClose = false) {
+  if (fromTabClose) {
+    // Tab chiusa: non c'è pagina su cui mostrare il toast, uso notifica browser
+    chrome.notifications.create({
+      type: "basic",
+      iconUrl: "icons/icon48.png",
+      title: "Site Cleaner Pro",
+      message: "✓ Pulizia automatica · " + domain
+    });
+    // Auto-chiudi dopo 4 secondi
+    setTimeout(() => {
+      try { chrome.notifications.clear("scp_autoclean"); } catch(_) {}
+    }, 4000);
+    return;
+  }
+
+  // Pulizia manuale: toast in-page sulla tab attiva
+  try {
+    const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (activeTab?.id && activeTab.url?.startsWith("http")) {
+      await chrome.scripting.executeScript({
+        target: { tabId: activeTab.id },
+        func: (msg) => {
+          document.getElementById("__scp_toast__")?.remove();
+          const t = document.createElement("div");
+          t.id = "__scp_toast__";
+          t.textContent = msg;
+          t.style.cssText = [
+            "position:fixed","bottom:24px","right:24px","z-index:2147483647",
+            "background:#1a1a24","color:#f0f0f5",
+            "border:1px solid rgba(108,99,255,0.4)","border-left:3px solid #6c63ff",
+            "border-radius:10px","padding:11px 16px",
+            "font:500 13px/1.4 -apple-system,sans-serif",
+            "box-shadow:0 4px 24px rgba(0,0,0,0.4)",
+            "opacity:0","transform:translateY(8px)",
+            "transition:opacity 0.2s ease,transform 0.2s ease",
+            "pointer-events:none","max-width:320px"
+          ].join(";");
+          document.body.appendChild(t);
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            t.style.opacity = "1"; t.style.transform = "translateY(0)";
+          }));
+          setTimeout(() => {
+            t.style.opacity = "0"; t.style.transform = "translateY(8px)";
+            setTimeout(() => t.remove(), 220);
+          }, 3000);
+        },
+        args: ["✓ Pulizia completata · " + domain]
+      });
+    }
+  } catch (_) {}
 }
 
 // ── Rules (I don't care about cookies) ───────────────────────────────────────
@@ -195,5 +270,5 @@ chrome.tabs.onRemoved.addListener(async (tabId) => {
   const data = await chrome.storage.session.get("tab_" + tabId);
   const url  = data["tab_" + tabId];
   if (!url) return;
-  await clearSiteData(url);
+  await clearSiteData(url, true); // fromTabClose = true
 });

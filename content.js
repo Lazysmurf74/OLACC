@@ -211,4 +211,55 @@
     setTimeout(() => obs.disconnect(), 20000);
   });
 
+
+  // ── Toast in-page ─────────────────────────────────────────────────────────
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg.action === "showToast") showToast(msg.message);
+  });
+
+  function showToast(text) {
+    // Rimuovi eventuale toast precedente
+    document.getElementById("__scp_toast__")?.remove();
+
+    const toast = document.createElement("div");
+    toast.id = "__scp_toast__";
+    toast.textContent = text;
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 2147483647;
+      background: #1a1a24;
+      color: #f0f0f5;
+      border: 1px solid rgba(108,99,255,0.4);
+      border-left: 3px solid #6c63ff;
+      border-radius: 10px;
+      padding: 11px 16px;
+      font: 500 13px/1.4 -apple-system, sans-serif;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: none;
+      max-width: 320px;
+    `;
+
+    document.body.appendChild(toast);
+
+    // Fade in
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        toast.style.opacity = "1";
+        toast.style.transform = "translateY(0)";
+      });
+    });
+
+    // Fade out dopo 3s
+    setTimeout(() => {
+      toast.style.opacity = "0";
+      toast.style.transform = "translateY(8px)";
+      setTimeout(() => toast.remove(), 220);
+    }, 3000);
+  }
+
 })();
