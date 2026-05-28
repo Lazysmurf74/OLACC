@@ -1,64 +1,42 @@
-
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
-
-<div class="container">
-
-<h1>Impostazioni avanzate</h1>
-
-<label>
-Modalità:
-<select id="mode">
-<option value="whitelist">Whitelist</option>
-<option value="blacklist">Blacklist</option>
-</select>
-</label>
-
-<label>
-<input type="checkbox" id="clearCookies">
-Elimina cookie
-</label>
-
-<label>
-<input type="checkbox" id="clearCache">
-Elimina cache
-</label>
-
-<label>
-<input type="checkbox" id="clearLocalStorage">
-Elimina LocalStorage + IndexedDB
-</label>
-
-<label>
-<input type="checkbox" id="clearHistory">
-Elimina cronologia
-</label>
-
-<h2>Whitelist / Blacklist</h2>
-
-<p>
-Un dominio per riga.
-Supporta *.dominio.com
-</p>
-
-<textarea id="siteList"></textarea>
-
-<h2>Login protetti</h2>
-
-<textarea id="protectedLogins"></textarea>
-
-<button id="saveBtn">
-Salva impostazioni
-</button>
-
+<body class="options-body">
+<div class="opt-wrap">
+  <h1>⚙️ Impostazioni avanzate</h1>
+  <div class="opt-grid">
+    <div class="opt-card">
+      <h2>Modalità lista</h2>
+      <select id="mode">
+        <option value="whitelist">Whitelist — pulisci tutto tranne la lista</option>
+        <option value="blacklist">Blacklist — pulisci solo la lista</option>
+      </select>
+    </div>
+    <div class="opt-card">
+      <h2>Cosa eliminare</h2>
+      <label><input type="checkbox" id="clearCookies"> Elimina cookie</label>
+      <label><input type="checkbox" id="clearCache"> Elimina cache</label>
+      <label><input type="checkbox" id="clearLocalStorage"> Elimina LocalStorage + IndexedDB</label>
+      <label><input type="checkbox" id="clearHistory"> Elimina cronologia</label>
+    </div>
+    <div class="opt-card">
+      <h2>Whitelist / Blacklist</h2>
+      <p>Un dominio per riga. Supporta *.dominio.com</p>
+      <textarea id="siteList" placeholder="esempio.com&#10;*.tracker.net"></textarea>
+    </div>
+    <div class="opt-card">
+      <h2>Login protetti</h2>
+      <p>Questi siti non verranno mai puliti.</p>
+      <textarea id="protectedLogins"></textarea>
+    </div>
+  </div>
+  <button id="saveBtn" class="opt-save">💾 Salva impostazioni</button>
 </div>
-
 <script src="options.js"></script>
-
 </body>
 </html>

@@ -1,25 +1,16 @@
 {
   "manifest_version": 3,
-  "name": "Site Cleaner Pro",
-  "version": "3.0.0",
-  "description": "Pulizia avanzata cookie e dati siti.",
+  "name": "OLAC+",
+  "version": "6.0.0",
+  "description": "Pulizia automatica cookie, cache e dati dei siti.",
   "permissions": [
-    "cookies",
-    "tabs",
-    "storage",
-    "browsingData",
-    "history",
-    "notifications"
+    "cookies", "tabs", "storage", "browsingData",
+    "history", "scripting", "sessions", "notifications",
+    "contextMenus", "tabs"
   ],
-  "host_permissions": [
-    "<all_urls>"
-  ],
-  "action": {
-    "default_popup": "popup.html"
-  },
-  "background": {
-    "service_worker": "background.js"
-  },
+  "host_permissions": ["<all_urls>"],
+  "action": { "default_popup": "popup.html" },
+  "background": { "service_worker": "background.js" },
   "options_page": "options.html",
   "icons": {
     "16": "icons/icon16.png",
